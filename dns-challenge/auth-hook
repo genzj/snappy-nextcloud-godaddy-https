@@ -1,0 +1,25 @@
+#!/bin/bash -ex
+# authenticate
+#
+#   certbot GoDaddy DNS TXT challenge updater
+#
+#   Usage:  certbot renew --manual --manual-auth-hook PATHTO/authenticate
+#		--manual-cleanup-hook PATHTO/cleanup
+#
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+source "$DIR/secrets"
+
+if [[ -z $GODADDY_API_KEY || -z $GODADDY_API_SECRET || -z $GODADDY_URL ]] ; then 
+	echo "godaddy api key/secret/url must be set"
+	exit 12
+fi
+
+DNS_REC_TYPE=TXT
+DNS_REC_NAME="_acme-challenge.${CERTBOT_DOMAIN%.$GODADDY_MAIN_DOMAIN}"
+DNS_REC_DATA="$CERTBOT_VALIDATION"
+DNS_REC_TTL="600"
+
+source "$DIR/util"
+
+use_python && wait_resolve
+

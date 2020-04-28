@@ -1,0 +1,19 @@
+DIR="$( cd "$( dirname "${BASH_SOURCE[0]}" )" >/dev/null 2>&1 && pwd )"
+
+function use_curl {
+	# Replace all of a Domain's type of DNS Records
+
+	curl -X PUT "${GODADDY_URL}/v1/domains/${GODADDY_MAIN_DOMAIN}/records/${DNS_REC_TYPE}" -H  "accept: application/json" -H  "Content-Type: application/json" -H  "Authorization: sso-key ${GODADDY_API_KEY}:${GODADDY_API_SECRET}" -d "[{ \"data\": \"${DNS_REC_DATA}\", \"name\": \"${DNS_REC_NAME}\", \"ttl\": ${DNS_REC_TTL} }]"
+
+}
+
+function use_python {
+	GODADDY_URL="$GODADDY_URL" GODADDY_API_KEY="$GODADDY_API_KEY" GODADDY_API_SECRET="$GODADDY_API_SECRET" python "$DIR/godaddy_record.py" "$GODADDY_MAIN_DOMAIN" "$DNS_REC_TYPE" "$DNS_REC_NAME" "$DNS_REC_DATA"
+}
+
+function wait_resolve {
+	for ((retry=0; retry < 10; retry += 1)); do
+		sleep 5
+		dig @223.5.5.5 $DNS_REC_TYPE "${DNS_REC_NAME}.${GODADDY_MAIN_DOMAIN}" | grep -ri "$DNS_REC_DATA" && break
+	done
+}
